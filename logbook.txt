@@ -1,0 +1,37 @@
+LogBook
+Fine 2D scan at T=200K 
+Date: Dec 12-13 2024
+
+THz waveform: 
+Start: 187.69
+Range #1: 1000, 10fs steps
+
+Pump:
+Start: 95.4525
+Range: 45 points of -50fs steps, 2 points of -110,000fs steps
+
+Fluence:
+Energymeter:  24.83 microJ (the half-waveplate angle is at 141 deg)
+Energy meter 	microJ	milliJ
+	        24.9	0.0249		
+Pump Size		
+Vertical diameter (mm)	1.25	0.125
+Horizontal diameter (mm)	1.43	0.143
+Area 	 5.615596868 (mm^2)	0.05615596868 (mm^2)	
+		
+Fluence (microJ/cm^2): 443.4078974
+Fluence (mJ/cm^2) 0.4434078974
+
+LogBook: 
+Instead of running it as directly 3 averages, we ran three separate full 2D scans (to prevent the scan to fail due to insufficient liquid nytrogen)
+
+The temperature has been very stable for the entire scan, no fluctuations
+
+When the heater was at 10%, I had to open the valve to let more cryogenic in , so the scan of Average1 1847 will be affected (namely the last few data points), where the pump is at 95.3250 and first seconds of 1857 file (pump is at 95.3175)
+
+Throughout the rest of the scan, the cryostat has never been touched, stable temperature
+
+During the third scan, there was a CW breakthrough: Rodrigo and Ben had to close the Pockel cells for a few seconds, this was done when there was almost no THz signal
+Rodrigo has the picture of which scan and pump delay was affected by this
+
+
