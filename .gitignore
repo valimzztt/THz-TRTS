@@ -26,6 +26,7 @@
 *.sql
 *.sqlite
 *.d24
+*.dat
 
 # OS generated files #
 ######################
