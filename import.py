@@ -21,12 +21,11 @@ def get_file_list(filedir):
     return [file.name for file in dirfiles]
 
 def open_files(filedir, filenames):
-    """Opens files and creates E1 and E2 2D matrix and Pumpindex .dat files."""
     first_file = filedir / filenames[0]
     data = pd.read_csv(first_file, delim_whitespace=True, header=None).values
 
-    m = data.shape[0]  # Number of rows (time axis)
-    n = len(filenames)  # Number of files (columns)
+    m = data.shape[0]  
+    n = len(filenames) 
 
     # Initialize arrays
     E1_2D = np.zeros((m, n + 1))

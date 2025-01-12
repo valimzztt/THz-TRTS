@@ -1,45 +1,34 @@
-# THz-TRTS Analysis
+# Analysis Explanation: Reflection_2D Function
 
-This repository contains scripts for analyzing THz-TRTS data, including averaging, extracting pump delays, and fitting the dielectric function.
+This files explains the functionality of the following repository concerning the analysis of THz-TRTS data. 
 
-## Workflow
+## Key Steps
 
-### Step 1: Compute Averages
+1. **Initialization**:
+    - If the scans for one pump delay were taken separately, then first run average.py; this script will collect all averages and save them inside a new folder that contains the average for each pump delay. 
+    - Once this is done, run `2D_initialization.py`, which processes files in the data folder, extract pump probe delays, and saves 2D CSV files for both lock-in amplifiers.
+    
+2. **Data Import and Baseline Correction**:
+    - Import pump times and delays.
+    - Read electric field data (`E1` and `E2`) from files.
+    - Remove baseline from the data.
 
-- **Script**: `average.py`
-- **Description**: Computes the average wavefunction for each file in the dataset.
-- **Output**: Averaged `.d24` files.
+3. **Time and Frequency Domain Conversion**:
+    - Compute the time and frequency domain representations of the reflected and pumped electric fields.
+    - Calculate the amplitude and phase of the electric fields using FFT.
 
-### Step 2: Generate Pump Delays and THz Waveform CSVs
+4. **Reflection Coefficient Calculation**:
+    - Compute the reflection coefficient `R` using the amplitude and phase of the electric fields.
 
-- **Script**: `2D_trts_map.py`
-- **Description**: Extracts pump delays and THz waveforms for Lock-In Amplifiers 1 and 2.
-- **Output**:
-  - `LockIn1.csv`
-  - `LockIn2.csv`
+5. **Material Property Fitting**:
+    - Define the fitting function `fitfun` to model the material properties.
+    - Use `lsqnonlin` to fit the model to the data and extract parameters like relaxation time (`tau`) and plasma frequency (`wp`).
 
-### Step 3: Fit Dielectric Function
+6. **Drude and Lorentz Model Calculations**:
+    - Calculate the Drude and Lorentz components of the dielectric function.
+    - Compute the complex refractive index and reflection coefficient.
 
-- **Script**: `2D_scan_analysis.py`
-- **Description**: Analyzes the data and fits the dielectric function.
-- **Output**: Fitted parameters and reflection coefficients.
+7. **Interpolation and Final Calculations**:
+    - Interpolate the data for finer frequency resolution.
+    - Calculate the conductivity, dielectric function, loss, and screening properties.
 
-## Additional Info
-
-- Pump size: Refer to `KnifeEdge_Dec11.png`.
-- Pump energy: 45 μJ.
-
-## Running the Scripts
-
-1. Run `average.py`
-   ```bash
-   python average.py
-   ```
-2. Run `2D_trts_map.py`
-   ```bash
-   python 2D_trts_map.py
-   ```
-3. Run `2D_scan_analysis.py`
-   ```bash
-   python 2D_scan_analysis.py
-   
