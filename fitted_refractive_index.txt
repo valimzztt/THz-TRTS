@@ -1,0 +1,19 @@
+Fitting TH-TDS to a Lorentz-Drude Model:
+Fitted Parameters:
+eps_inf: 8.601777326202962
+wp: 1.79e+13 rad/s
+gamma: 3.10e+12 1/s
+tau: 3.23e-13 s
+Fitted Oscillator strength of Lorentz term: 5.81e+13 rad/s
+Resonance frequency of Lorentz term: 2.47e+13 1/s
+
+
+Fitting TH-TDS to a Lorentz (only) model:
+Fitted Parameters:
+eps_inf: 10.438534762391702
+wp: 7.20e+13 rad/s
+gamma: 1.38e+13 1/s
+tau: 7.26e-14 s
+Fitted Oscillator strength of Lorentz term: 6.51e+13 rad/s
+Resonance frequency of Lorentz term: 2.46e+13 1/s
+

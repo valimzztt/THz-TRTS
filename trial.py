@@ -47,12 +47,11 @@ def drude_conductivity1(freq):
     wp = np.sqrt(N * q**2 / (m * const.epsilon_0))
     print("Plasma frequency: ", wp/1e12)
     eps_drude = (N*q**2)*tau/(m*(1- 1j*tau*omega))
-    eps_drude = (wp**2 * tau*const.epsilon_0)/(1 - 1j * omega * tau)
     return eps_drude.real, eps_drude.imag
 
 wp  = 68*1e12
 eps_inf = 10.2
-gamma = 1e11
+gamma = 1/(2.80e-24)
 freq = np.linspace(0.1e12, 10e12, 1000)  # Frequency in Hz (0.1 THz to 5 THz)
 omega = 2 * np.pi *freq 
 eps_drude =  (wp**2 / (omega**2 + 1j * omega * gamma)) 

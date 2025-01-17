@@ -80,8 +80,9 @@ def process_data(lockin1_file, lockin2_file, time_delay_column):
     lockin2_signals -= np.mean(lockin2_signals)
     E_Ref = lockin1_signals - lockin2_signals
     E_Pump = lockin1_signals + lockin2_signals
+
     global processed_E_Ref, processed_E_Pump
-    global E_Ref_windowed, E_Pump_windowed
+    global E_Ref_windowed, E_Pump_windowed, dE_windowed
 
     def create_centered_hann(data_length, window_center, window_width):
         hann_window = np.hanning(window_width)
@@ -97,7 +98,7 @@ def process_data(lockin1_file, lockin2_file, time_delay_column):
     pump_hann_window = create_centered_hann(len(E_Pump), hann_window_center, hann_window_width)
     E_Ref_windowed = E_Ref * ref_hann_window
     E_Pump_windowed = E_Pump * pump_hann_window
-
+    dE_windowed = E_Pump_windowed-E_Ref_windowed
     time_sample = time_axis[1] - time_axis[0]
     freqs = np.fft.fftfreq(len(time_axis), d=time_sample)
     freqs = freqs[:len(freqs) // 2]
@@ -106,7 +107,7 @@ def process_data(lockin1_file, lockin2_file, time_delay_column):
     E_Ref_windowed_FFT = np.fft.fft(E_Ref_windowed)[:len(freqs)]
     E_Pump_windowed_FFT = np.fft.fft(E_Pump_windowed)[:len(freqs)]
 
-    return E_Ref_windowed, E_Pump_windowed, time_axis
+    return E_Ref_windowed, E_Pump_windowed, dE_windowed, time_axis
 
 
 def analyze_reflection(E_Ref_windowed, E_Pump_windowed, time_axis):
@@ -150,10 +151,28 @@ def fit_data(R, freqs, init):
     return n_fit, sigma_drude_fit, tau_fit, wp_fit, eps_fit
 
 
+def conductivity_with_resonance(freq, omega_0, tau, wp):
+    """
+    Calculate the conductivity using the modified Drude model with a restoring force.
+
+    Parameters:
+    - freq: Frequency array (Hz).
+    - N: Carrier density (m^-3).
+    - tau: Relaxation time (s).
+    - m_star: Effective mass of electron (kg).
+    - omega_0: Resonance angular frequency (rad/s).
+
+    Returns:
+    - sigma: Complex conductivity (S/m).
+    """
+    omega = 2 * np.pi * freq  # Angular frequency
+    sigma =  wp**2 * tau * const.epsilon_0/(1 - 1j * tau * (omega - (omega_0**2 / omega)))
+    return sigma
+
 if __name__ == "__main__":
     lockin1_file = "processed_data_temp200/LockIn1.csv"
     lockin2_file = "processed_data_temp200/LockIn2.csv"
-    output_folder = "reflection_analysis_new_temp200"
+    output_folder = "reflection_analysis_temp200"
     lockin1_data = pd.read_csv(lockin1_file)
     pump_delays = lockin1_data.columns[1:].tolist()  # Get pump delays from the column names, excluding the first column
     fig, axs = plt.subplots(1, 2, figsize=(12, 8))
@@ -178,7 +197,8 @@ if __name__ == "__main__":
         axs[0].cla()
         axs[1].cla()
         pump_delay = pump_delays[callback.ind]
-        E_Ref_windowed, E_Pump_windowed, time_axis = process_data(lockin1_file, lockin2_file, time_delay_column=pump_delay)
+        E_Ref_windowed, E_Pump_windowed, dE_windowed, time_axis = process_data(lockin1_file, lockin2_file, time_delay_column=pump_delay )
+        
         R, E_Ref_Amp, E_Pump_Amp, E_Ref_Phase, E_Pump_Phase, freqs = analyze_reflection(E_Ref_windowed, E_Pump_windowed, time_axis)
         initial_guess = [(1/9.85e+12), 6.8*1e13]
         _, sigma_drude_fit,  tau_fit, wp_fit, eps_fit = fit_data(R, freqs, initial_guess)
@@ -187,7 +207,7 @@ if __name__ == "__main__":
         print(f"Pump delay: {pump_delay} ps")
         print(f"Fitted tau: {tau_fit:.2e} s")
         print(f"Fitted wp: {wp_fit:.2e} rad/s")
-        # Append the pump delay and fitted parameters to a list
+
         if not hasattr(callback, 'results_list'):
             callback.results_list = []
 
@@ -198,18 +218,17 @@ if __name__ == "__main__":
         })
 
         
-        axs[0].set_title(f"Drude Conductivity, pump delay= {pump_delay} ps")
+        axs[0].set_title(f"Pulse in time, pump delay= {pump_delay} ps")
         axs[0].plot(time_axis, E_Ref_windowed, label="E_Ref")
-        axs[0].plot(time_axis,  E_Pump_windowed,label="E_Pump")
+        axs[0].plot(time_axis,  dE_windowed,label="dE")
         axs[0].set_xlabel("Time (ps)")
         axs[0].set_ylabel("Intensity (a.u.)")
         axs[0].legend()
-        #axs[0].set_xlim(1, 10)
+        axs[0].set_xlim(0, 8)
         axs[0].grid(True)
 
-        axs[1].set_title(f"Transient Photoconductivity, pump delay= {pump_delay} ps")
-        axs[1].plot(freqs / 1e12, np.imag(delta_sigma), label="Imag(delta_sigma)")
-        axs[1].plot(freqs / 1e12, np.real(delta_sigma), label="Real(delta_sigma)")
+        axs[1].set_title(f"Reflectivity, pump delay= {pump_delay} ps")
+        axs[1].plot(freqs / 1e12, np.abs(R)-1, label="Abs(R)-1")
         axs[1].set_xlabel("Frequency (THz)")
         axs[1].set_ylabel("Transient Photoconductivity (S/m)")
         axs[1].legend()
@@ -229,7 +248,6 @@ if __name__ == "__main__":
     update_plot(callback)
     plt.show()
 
-    # Save the results list to a single CSV file
     results_df = pd.DataFrame(callback.results_list)
     output_file = os.path.join(output_folder, "fit_results.csv")
     results_df.to_csv(output_file, index=False)

@@ -4,6 +4,7 @@ import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
 from datetime import datetime
+import re
 
 def process_data(data_folder, output_folder):
     """
@@ -14,9 +15,7 @@ def process_data(data_folder, output_folder):
 
     # Get list of .d24 files in the folder
     data_folder = Path(data_folder)
-    #files = sorted([f for f in data_folder.glob("*.d24")], key=os.path.getmtime)
-    files = [data_folder / f for f in os.listdir(data_folder) if f.endswith('Ave.d24')]
-
+    files = [data_folder / f for f in os.listdir(data_folder) if f.endswith('Average.d24')]
     def extract_date_from_filename(filename):
             try:
                 date_str = ''.join(str(filename).split(' ')[1:3])
@@ -24,15 +23,36 @@ def process_data(data_folder, output_folder):
             except (IndexError, ValueError) as e:
                 print(f"Error processing file {filename}: {e}")
                 return None
-    # This ensures that the files are sorted by date of creation
+   
+    # files.sort(key=lambda f: extract_date_from_filename(f) or datetime.min)
+    def extract_pump_delay_number(filepath):
+        """
+        Extracts the pump delay number from the full file path.
+        Returns the number as an integer or None if no number is found.
+        """
+        # Extract filename from the full path
+        filename = str(filepath).split('/')[-1]  # Handle Unix-like paths
+
+        match = re.search(r'pump_delay_(\d+)', filename)
+        if match:
+            return int(match.group(1))  # Extract and convert to integer
+        return None  # Return None if no match is found
+
+    # Sort files based on the extracted pump delay number
+    # Use this one for T=200K
+    # files.sort(key=lambda f: extract_pump_delay_number(f) or 0)  
+    # Use this one for Roomtemp
     files.sort(key=lambda f: extract_date_from_filename(f) or datetime.min)
-    # Prompt the user for pump probe delays
+    print(files[1:5])
     try:
-        start_delay = float(input("Enter the starting pump delay (in ps): "))
+        """ start_delay = float(input("Enter the starting pump delay (in ps): "))
         stop_delay = float(input("Enter the stopping pump delay (in ps): "))
         step_size = float(input("Enter the step size for pump delays (in ps): "))
-        additional_delays = input("Enter additional delays (comma-separated, in ps), or press Enter to skip: ")
-
+        additional_delays = input("Enter additional delays (comma-separated, in ps), or press Enter to skip: ") """
+        start_delay = -0.4
+        stop_delay = 2
+        step_size = 0.05
+        additional_delays = "110"
         # Generate pump delays using linspace and append additional delays
         pump_delays = list(np.round(np.arange(start_delay, stop_delay + step_size, step_size), 2))
         pump_delays = [round(delay, 2) for delay in pump_delays]
@@ -40,6 +60,7 @@ def process_data(data_folder, output_folder):
         if additional_delays:
             pump_delays.extend([float(x) for x in additional_delays.split(",")])
         if len(pump_delays) != len(files):
+            print(len)
             raise ValueError("Number of delays does not match the number of files, check carefully.")
 
     except ValueError as e:
@@ -51,10 +72,7 @@ def process_data(data_folder, output_folder):
     lockin2_matrix = []
 
     for file in files:
-        # Read the file
-        print(file)
-        data = pd.read_csv(file, delim_whitespace=True, header=None, names=["Time (ps)", "LockIn1", "LockIn2", "Column4", "Column5"])
-
+        data = pd.read_csv(file, delim_whitespace=True, skiprows=1, header=None, names=["Time (ps)", "LockIn1", "LockIn2"])
 
         if time_axis is None:
             time_axis = data["Time (ps)"].values  # Set the time axis from the first file
@@ -122,6 +140,6 @@ def process_data(data_folder, output_folder):
 
 if __name__ == "__main__":
     data_folder = "Dec16_New2DScan_RoomTemp" 
-    output_folder = "processed_data_roomtemp"
+    output_folder = "processed_data_roomtemp_new"
     process_data(data_folder, output_folder)
 
